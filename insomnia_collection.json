@@ -1,0 +1,136 @@
+{
+  "_type": "export",
+  "__export_format": 4,
+  "__export_date": "2025-08-25T00:00:00.000Z",
+  "resources": [
+    {
+      "_id": "wrk_banco_aurora",
+      "_type": "workspace",
+      "name": "Banco Aurora API"
+    },
+    {
+      "_id": "env_base",
+      "_type": "environment",
+      "parentId": "wrk_banco_aurora",
+      "name": "Base Environment",
+      "data": {
+        "baseUrl": "http://localhost:5000"
+      }
+    },
+    {
+      "_id": "req_create_customer",
+      "_type": "request",
+      "parentId": "wrk_banco_aurora",
+      "name": "POST /customers",
+      "method": "POST",
+      "url": "{{ baseUrl }}/customers",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\"name\": \"Alice\", \"document_id\": \"111.222.333-44\", \"email\": \"alice@example.com\"}"
+      }
+    },
+    {
+      "_id": "req_open_account",
+      "_type": "request",
+      "parentId": "wrk_banco_aurora",
+      "name": "POST /accounts",
+      "method": "POST",
+      "url": "{{ baseUrl }}/accounts",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\"owner_id\": \"<PUT-CUSTOMER-ID>\", \"kind\": \"savings\", \"balance\": 500, \"currency\": \"BRL\"}"
+      }
+    },
+    {
+      "_id": "req_get_account",
+      "_type": "request",
+      "parentId": "wrk_banco_aurora",
+      "name": "GET /accounts/:id",
+      "method": "GET",
+      "url": "{{ baseUrl }}/accounts/{{ _.account_id }}",
+      "parameters": []
+    },
+    {
+      "_id": "req_deposit",
+      "_type": "request",
+      "parentId": "wrk_banco_aurora",
+      "name": "POST /accounts/:id/deposit",
+      "method": "POST",
+      "url": "{{ baseUrl }}/accounts/{{ _.account_id }}/deposit",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\"amount\": 120, \"note\": \"dep\\u00f3sito\"}"
+      }
+    },
+    {
+      "_id": "req_withdraw",
+      "_type": "request",
+      "parentId": "wrk_banco_aurora",
+      "name": "POST /accounts/:id/withdraw",
+      "method": "POST",
+      "url": "{{ baseUrl }}/accounts/{{ _.account_id }}/withdraw",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\"amount\": 75, \"note\": \"saque\"}"
+      }
+    },
+    {
+      "_id": "req_transfer",
+      "_type": "request",
+      "parentId": "wrk_banco_aurora",
+      "name": "POST /transfer",
+      "method": "POST",
+      "url": "{{ baseUrl }}/transfer",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\"from_id\": \"<FROM>\", \"to_id\": \"<TO>\", \"amount\": 50, \"note\": \"poupan\\u00e7a do m\\u00eas\"}"
+      }
+    },
+    {
+      "_id": "req_eod",
+      "_type": "request",
+      "parentId": "wrk_banco_aurora",
+      "name": "POST /eod",
+      "method": "POST",
+      "url": "{{ baseUrl }}/eod"
+    },
+    {
+      "_id": "req_dump",
+      "_type": "request",
+      "parentId": "wrk_banco_aurora",
+      "name": "GET /dump",
+      "method": "GET",
+      "url": "{{ baseUrl }}/dump"
+    }
+  ]
+}
