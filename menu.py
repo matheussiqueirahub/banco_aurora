@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 from __future__ import annotations
+
 from dataclasses import dataclass
+
 
 # ===== Modelo OO =====
 @dataclass
@@ -52,10 +54,16 @@ class ContaPoupanca(Conta):
 
 
 class ContaInvestimento(Conta):
-    def __init__(self, numero: str, titular: str, saldo: float = 0.0,
-                 taxa_adm: float = 0.01, rendimento: float = 0.05):
+    def __init__(
+        self,
+        numero: str,
+        titular: str,
+        saldo: float = 0.0,
+        taxa_adm: float = 0.01,
+        rendimento: float = 0.05,
+    ):
         super().__init__(numero, titular, saldo)
-        self.taxa_adm = taxa_adm      # ex.: 0.01 = 1% de administração
+        self.taxa_adm = taxa_adm  # ex.: 0.01 = 1% de administração
         self.rendimento = rendimento  # ex.: 0.05 = 5% de rendimento
 
     def end_of_day(self):

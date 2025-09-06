@@ -1,10 +1,13 @@
-
 from __future__ import annotations
-from dataclasses import dataclass, field, asdict
-from typing import Dict, Type
-import json, uuid
-from .accounts import Account, CheckingAccount, SavingsAccount, InvestmentAccount
+
+import json
+import uuid
+from dataclasses import asdict, dataclass, field
+from typing import Dict
+
+from .accounts import Account, CheckingAccount, InvestmentAccount, SavingsAccount
 from .exceptions import AccountNotFound
+
 
 @dataclass
 class Bank:
@@ -54,7 +57,16 @@ class Bank:
         bank.customers = data.get("customers", {})
         for aid, adata in data.get("accounts", {}).items():
             kind = adata["type"].lower().replace("account", "")
-            klass = {"checking": CheckingAccount, "savings": SavingsAccount, "investment": InvestmentAccount}[kind]
-            acc = klass(id=adata["id"], owner_id=adata["owner_id"], currency=adata["currency"], balance=adata["balance"])
+            klass = {
+                "checking": CheckingAccount,
+                "savings": SavingsAccount,
+                "investment": InvestmentAccount,
+            }[kind]
+            acc = klass(
+                id=adata["id"],
+                owner_id=adata["owner_id"],
+                currency=adata["currency"],
+                balance=adata["balance"],
+            )
             bank.accounts[aid] = acc
         return bank

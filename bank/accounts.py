@@ -1,14 +1,16 @@
-
 from __future__ import annotations
-from dataclasses import dataclass, field, asdict
-from datetime import datetime
-from typing import List, Dict, Any
+
 from abc import ABC, abstractmethod
-from .exceptions import NegativeAmount, InsufficientFunds, CurrencyMismatch
+from dataclasses import asdict, dataclass, field
+from datetime import datetime
+from typing import Any, Dict, List
+
+from .exceptions import CurrencyMismatch, InsufficientFunds, NegativeAmount
+
 
 @dataclass
 class Transaction:
-    kind: str               # 'deposit', 'withdraw', 'transfer_in', 'transfer_out', 'fee', 'yield', 'interest'
+    kind: str  # 'deposit', 'withdraw', 'transfer_in', 'transfer_out', 'fee', 'yield', 'interest'
     amount: float
     balance_after: float
     timestamp: datetime
@@ -18,6 +20,7 @@ class Transaction:
         d = asdict(self)
         d["timestamp"] = self.timestamp.isoformat()
         return d
+
 
 @dataclass
 class Account(ABC):
@@ -31,12 +34,14 @@ class Account(ABC):
         if amount <= 0:
             raise NegativeAmount("Amount must be positive.")
 
-    def _assert_currency(self, other: 'Account'):
+    def _assert_currency(self, other: "Account"):
         if self.currency != other.currency:
             raise CurrencyMismatch(f"Currency mismatch: {self.currency} vs {other.currency}")
 
     def _record(self, kind: str, amount: float, note: str = ""):
-        self._ledger.append(Transaction(kind, round(amount, 2), round(self.balance, 2), datetime.utcnow(), note))
+        self._ledger.append(
+            Transaction(kind, round(amount, 2), round(self.balance, 2), datetime.utcnow(), note)
+        )
 
     @property
     def ledger(self) -> List[Transaction]:
@@ -54,7 +59,7 @@ class Account(ABC):
         self.balance -= amount
         self._record("withdraw", amount, note or "withdraw")
 
-    def transfer_to(self, other: 'Account', amount: float, note: str = "") -> None:
+    def transfer_to(self, other: "Account", amount: float, note: str = "") -> None:
         self._assert_currency(other)
         self.withdraw(amount, note or f"transfer to {other.id}")
         other.deposit(amount, note or f"transfer from {self.id}")
@@ -76,6 +81,7 @@ class Account(ABC):
             "ledger": [t.to_dict() for t in self._ledger],
         }
 
+
 @dataclass
 class CheckingAccount(Account):
     maintenance_fee: float = 3.90
@@ -89,6 +95,7 @@ class CheckingAccount(Account):
                 self.balance -= fee
                 self._record("fee", fee, f"maintenance (< {self.minimum_balance} {self.currency})")
 
+
 @dataclass
 class SavingsAccount(Account):
     daily_interest_rate: float = 0.0005  # ~0.05% per day ~ 1.5%/mo simplified
@@ -98,6 +105,7 @@ class SavingsAccount(Account):
             interest = self.balance * self.daily_interest_rate
             self.balance += interest
             self._record("interest", interest, f"{self.daily_interest_rate*100:.4f}% daily")
+
 
 @dataclass
 class InvestmentAccount(Account):
