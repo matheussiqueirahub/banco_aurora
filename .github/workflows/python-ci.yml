@@ -1,0 +1,144 @@
+name: Reusable Python CI
+
+on:
+  workflow_call:
+    inputs:
+      matrix-os:
+        description: JSON array of OS runners
+        required: false
+        type: string
+        default: '["ubuntu-latest"]'
+      python-versions:
+        description: JSON array of Python versions
+        required: false
+        type: string
+        default: '["3.11"]'
+      working-directory:
+        description: Directory where commands run
+        required: false
+        type: string
+        default: '.'
+      extra-install:
+        description: Extra pip packages to install
+        required: false
+        type: string
+        default: ''
+      run-lint:
+        description: Run ruff and black --check
+        required: false
+        type: boolean
+        default: true
+      run-tests:
+        description: Run pytest
+        required: false
+        type: boolean
+        default: true
+      coverage:
+        description: Use coverage to run tests
+        required: false
+        type: boolean
+        default: false
+      validate-script:
+        description: Validate output of a Python script (glob)
+        required: false
+        type: boolean
+        default: false
+      script-path-glob:
+        description: Glob to locate the script to validate
+        required: false
+        type: string
+        default: ''
+      script-expected:
+        description: Newline-separated expected output lines
+        required: false
+        type: string
+        default: ''
+      post-run:
+        description: Shell snippet to run after tests (bash)
+        required: false
+        type: string
+        default: ''
+
+jobs:
+  python-ci:
+    name: Python ${{ matrix.python-version }} on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: ${{ fromJson(inputs["matrix-os"]) }}
+        python-version: ${{ fromJson(inputs["python-versions"]) }}
+
+    defaults:
+      run:
+        shell: bash
+        working-directory: ${{ inputs["working-directory"] }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: 'pip'
+
+      - name: Show Python version
+        run: python -V
+
+      - name: Install tools and deps
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          python -m pip install ruff black pytest coverage
+          if [ -n "${{ inputs["extra-install"] }}" ]; then
+            python -m pip install ${{ inputs["extra-install"] }}
+          fi
+
+      - name: Lint (ruff)
+        if: inputs.run-lint == true
+        run: ruff check .
+
+      - name: Format check (black)
+        if: inputs.run-lint == true
+        run: black --check .
+
+      - name: Validate script output
+        if: inputs.validate-script == true
+        env:
+          EXPECTED: ${{ inputs["script-expected"] }}
+          GLOB: ${{ inputs["script-path-glob"] }}
+        run: |
+          python - <<'PY'
+          import glob, json, os, subprocess, sys
+          pattern = os.environ["GLOB"]
+          files = glob.glob(pattern)
+          assert files, f"Nenhum arquivo encontrado pelo glob: {pattern!r}"
+          script = files[0]
+          res = subprocess.run([sys.executable, '-X', 'utf8', script], capture_output=True, text=True, check=True)
+          out = [l.strip() for l in res.stdout.splitlines() if l.strip()]
+          exp = [l.strip() for l in os.environ['EXPECTED'].splitlines() if l.strip()]
+          if out != exp:
+            print('STDOUT:\n' + res.stdout)
+            raise SystemExit(f"Saída inesperada.\nEsperado: {exp}\nObtido:   {out}")
+          print('Saída conferida com sucesso.')
+          PY
+
+      - name: Run tests
+        if: inputs.run-tests == true && inputs.coverage == false
+        run: pytest -q
+
+      - name: Run tests with coverage
+        if: inputs.run-tests == true && inputs.coverage == true
+        run: |
+          python -m coverage run -m pytest -q
+          python -m coverage report -m || true
+
+      - name: Post run
+        if: inputs.post-run != ''
+        env:
+          POST: ${{ inputs["post-run"] }}
+        run: |
+          bash -euo pipefail -c "$POST"
+

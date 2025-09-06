@@ -11,23 +11,11 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build-test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-          cache: 'pip'
-      - name: Install deps
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install ruff black
-      - name: Ruff (lint)
-        run: ruff check .
-      - name: Black (format check)
-        run: black --check .
-      - name: Tests
-        run: pytest -q
-
+  python:
+    uses: matheussiqueirahub/banco_aurora/.github/workflows/python-ci.yml@main
+    with:
+      matrix-os: '["ubuntu-latest"]'
+      python-versions: '["3.11"]'
+      run-lint: true
+      run-tests: true
+      coverage: false
