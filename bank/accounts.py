@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import asdict, dataclass, field
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any, Dict, List
 
 from .exceptions import CurrencyMismatch, InsufficientFunds, NegativeAmount
@@ -40,7 +40,13 @@ class Account(ABC):
 
     def _record(self, kind: str, amount: float, note: str = ""):
         self._ledger.append(
-            Transaction(kind, round(amount, 2), round(self.balance, 2), datetime.utcnow(), note)
+            Transaction(
+                kind,
+                round(amount, 2),
+                round(self.balance, 2),
+                datetime.now(UTC),
+                note,
+            )
         )
 
     @property
