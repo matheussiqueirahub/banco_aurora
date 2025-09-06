@@ -1,5 +1,5 @@
-
 from bank import Bank, Customer
+
 
 def test_transfer_and_eod():
     bank = Bank(name="Banco Aurora")
@@ -11,6 +11,7 @@ def test_transfer_and_eod():
     bank.end_of_day()  # interest on b, possible fee on a if below threshold
     assert a.balance <= 50.0
     assert b.balance >= 50.0
+
 
 def test_dump_and_load():
     bank = Bank(name="Banco Aurora")
